@@ -8,14 +8,14 @@
 
 #include "wscerr.h"
 
-#include "background_color.h"
+#include "background.h"
 #include "font.h"
 
 static uint8_t map_range(uint8_t, const uint8_t, const uint8_t, const uint8_t, const uint8_t);
 static uint8_t sin(uint8_t);
 
-const ws_rom char greeting_text[] = "Hello, this is the Color part!";
-uint8_t text_y_scroll = -8;
+const static ws_rom char greeting_text[] = "Hello, this is the Color part!";
+const static uint16_t first_font_tile = (uint16_t)(((background_color_tiles_size * (uint32_t)256) / background_color_tiles_size) / (32 / sizeof(uint16_t)));
 
 WSE_RESERVE_TILES(512, 1024);
 
@@ -43,13 +43,13 @@ void main(void)
 		ws_gdma_copy(WS_SCREEN_COLOR_MEM(0), background_color_palette, background_color_palette_size);
 		ws_gdma_copy(&wse_screen1, background_color_map, background_color_map_size);
 
-		ws_gdma_copy(WS_TILE_MEM(256), font_color_tiles, font_color_tiles_size);
+		ws_gdma_copy(WS_TILE_MEM(first_font_tile), font_tiles, font_tiles_size);
 		ws_gdma_copy(WS_SCREEN_COLOR_MEM(4), font_color_palette, font_color_palette_size);
 
 		uint8_t x = 0;
 		for (const ws_rom char* ptr = greeting_text; *ptr != '\0'; ptr++)
 		{
-			if (*ptr != ' ') ws_screen_put_tile(&wse_screen2, ((*ptr - 0x20) + 0x100) | WS_SCREEN_ATTR_PALETTE(4), x, 0);
+			if (*ptr != ' ') ws_screen_put_tile(&wse_screen2, ((*ptr - 0x20) + first_font_tile) | WS_SCREEN_ATTR_PALETTE(4), x, 0);
 			x++;
 		}
 
@@ -59,6 +59,7 @@ void main(void)
 
 		ws_display_set_control(WS_DISPLAY_CTRL_SCR1_ENABLE | WS_DISPLAY_CTRL_SCR2_ENABLE);
 
+		uint8_t text_y_scroll = -8;
 		while (1)
 		{
 			ws_display_scroll_screen1_by(1, -1);

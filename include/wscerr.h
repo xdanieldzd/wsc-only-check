@@ -15,8 +15,6 @@ struct wscerr_string
 	const char ptr[WS_DISPLAY_WIDTH_TILES + 1];
 };
 
-extern const ws_rom struct wscerr_string wscerr_error_messages[];
-
 #define WSCERR_STRING(_x, _y, _ptr)	\
 {								\
 	.x = _x,						\

@@ -49,7 +49,7 @@ const static uint16_t first_font_tile = (uint16_t)(((WSCERR_BACKGROUND_TILES_SIZ
 const static uint16_t first_font_tile = 0x000;
 #endif
 
-const ws_rom struct wscerr_string wscerr_error_messages[] =
+const static ws_rom struct wscerr_string wscerr_error_messages[] =
 {
 	WSCERR_ERROR_MESSAGE_1,
 #ifdef WSCERR_ERROR_MESSAGE_2

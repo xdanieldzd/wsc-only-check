@@ -38,8 +38,8 @@
 #define    WSCERR_ENABLE_TEXT_BLINK
 
 #define    WSCERR_FONT_FILENAME                  "font.h"
-#define    WSCERR_FONT_TILES                     font_mono_tiles
-#define    WSCERR_FONT_TILES_SIZE                font_mono_tiles_size
+#define    WSCERR_FONT_TILES                     font_tiles
+#define    WSCERR_FONT_TILES_SIZE                font_tiles_size
 #define    WSCERR_FONT_PALETTE                   font_mono_palette
 #define    WSCERR_FONT_PALETTE_SIZE              font_mono_palette_size
 
@@ -50,7 +50,7 @@
 #define    WSCERR_ERROR_MESSAGE_3                WSCERR_STRING(4, 2, "WonderSwan Color!")
 
 #ifdef WSCERR_ENABLE_BACKGROUND
-#    define    WSCERR_BACKGROUND_FILENAME        "background_mono.h"
+#    define    WSCERR_BACKGROUND_FILENAME        "background.h"
 #    define    WSCERR_BACKGROUND_TILES           background_mono_tiles
 #    define    WSCERR_BACKGROUND_TILES_SIZE      background_mono_tiles_size
 #    define    WSCERR_BACKGROUND_MAP             background_mono_map

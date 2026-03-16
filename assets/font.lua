@@ -7,7 +7,8 @@ local output = superfamiconv.convert_tileset(
 		:mode("ws")
 )
 
-process.emit_symbol("font_mono", output)
+process.emit_symbol("font_tiles", output.tiles)
+process.emit_symbol("font_mono_palette", output.palette)
 
 output = superfamiconv.convert_tileset(
 	"font.png",
@@ -15,4 +16,4 @@ output = superfamiconv.convert_tileset(
 		:mode("wsc"):bpp(2)
 )
 
-process.emit_symbol("font_color", output)
+process.emit_symbol("font_color_palette", output.palette)
