@@ -36,19 +36,6 @@
 
 #define ARRAY_LENGTH(array)			sizeof(array) / sizeof(array[0])
 
-#if defined(WSCERR_ENABLE_TEXT_BLINK)
-#	define APPROX_REFRESH_RATE		(12000 / WS_DISPLAY_VTOTAL)
-#	define TEXT_DURATION_VISIBLE		(APPROX_REFRESH_RATE * 2)
-#	define TEXT_DURATION_INVISIBLE	(APPROX_REFRESH_RATE / 5)
-#	define TEXT_DURATION_TOTAL		(TEXT_DURATION_VISIBLE + TEXT_DURATION_INVISIBLE)
-#endif
-
-#if defined(WSCERR_ENABLE_BACKGROUND)
-const static uint16_t first_font_tile = (uint16_t)(((WSCERR_BACKGROUND_TILES_SIZE * (uint32_t)256) / WSCERR_BACKGROUND_TILES_SIZE) / (32 / sizeof(uint16_t)));
-#else
-const static uint16_t first_font_tile = 0x000;
-#endif
-
 const static ws_rom struct wscerr_string wscerr_error_messages[] =
 {
 	WSCERR_ERROR_MESSAGE_1,
@@ -66,8 +53,18 @@ const static ws_rom struct wscerr_string wscerr_error_messages[] =
 #endif
 };
 
-#if defined(WSCERR_ENABLE_TEXT_BLINK)
+#if defined(WSCERR_ENABLE_BLINKING_TEXT)
+#	define APPROX_REFRESH_RATE		(12000 / WS_DISPLAY_VTOTAL)
+#	define TEXT_DURATION_VISIBLE		(APPROX_REFRESH_RATE * 2)
+#	define TEXT_DURATION_INVISIBLE	(APPROX_REFRESH_RATE / 5)
+#	define TEXT_DURATION_TOTAL		(TEXT_DURATION_VISIBLE + TEXT_DURATION_INVISIBLE)
 static uint8_t is_text_visible = 0;
+#endif
+
+#if defined(WSCERR_ENABLE_BACKGROUND)
+const static uint16_t first_font_tile = (uint16_t)(((WSCERR_BACKGROUND_TILES_SIZE * (uint32_t)256) / WSCERR_BACKGROUND_TILES_SIZE) / (32 / sizeof(uint16_t)));
+#else
+const static uint16_t first_font_tile = 0x000;
 #endif
 
 static volatile uint32_t vblank_counter = 0;
@@ -84,15 +81,29 @@ void wscerr_show_error_screen(void)
 	/* Clear screen 2 */
 	ws_screen_fill_tiles(&wse_screen2, first_font_tile | WS_SCREEN_ATTR_PALETTE(4), 0, 0, 32, 32);
 
-	/* Copy tiles and screen 1 map */
-#if defined(WSCERR_ENABLE_BACKGROUND)
-	memcpy(WS_TILE_MEM(0), WSCERR_BACKGROUND_TILES, WSCERR_BACKGROUND_TILES_SIZE);
-	memcpy(&wse_screen1, WSCERR_BACKGROUND_MAP, WSCERR_BACKGROUND_MAP_SIZE);
-	memcpy(WS_TILE_MEM(first_font_tile), WSCERR_FONT_TILES, WSCERR_FONT_TILES_SIZE);
-#else
-	ws_screen_fill_tiles(&wse_screen1, first_font_tile | WS_SCREEN_ATTR_PALETTE(0), 0, 0, 32, 32);
-	memcpy(WS_TILE_MEM(first_font_tile), WSCERR_FONT_TILES, WSCERR_FONT_TILES_SIZE);
-#endif
+	/* Copy and/or decompress tiles and screen 1 map */
+
+#	if defined(WSCERR_ENABLE_COMPRESSION_FONT_TILES)
+		wsx_lzsa2_decompress(WS_TILE_MEM(first_font_tile), WSCERR_FONT_TILES);
+#	else
+		memcpy(WS_TILE_MEM(first_font_tile), WSCERR_FONT_TILES, WSCERR_FONT_TILES_SIZE);
+#	endif
+
+#	if defined(WSCERR_ENABLE_BACKGROUND)
+#		if defined(WSCERR_ENABLE_COMPRESSION_BACKGROUND_TILES)
+			wsx_lzsa2_decompress(WS_TILE_MEM(0), WSCERR_BACKGROUND_TILES);
+#		else
+			memcpy(WS_TILE_MEM(0), WSCERR_BACKGROUND_TILES, WSCERR_BACKGROUND_TILES_SIZE);
+#		endif
+
+#		if defined(WSCERR_ENABLE_COMPRESSION_BACKGROUND_MAP)
+			wsx_lzsa2_decompress(&wse_screen1, WSCERR_BACKGROUND_MAP);
+#		else
+			memcpy(&wse_screen1, WSCERR_BACKGROUND_MAP, WSCERR_BACKGROUND_MAP_SIZE);
+#		endif
+#	else
+		ws_screen_fill_tiles(&wse_screen1, first_font_tile | WS_SCREEN_ATTR_PALETTE(0), 0, 0, 32, 32);
+#	endif
 
 	/* Setup palettes */
 	ws_display_set_shade_lut(WS_DISPLAY_SHADE_LUT_DEFAULT);
@@ -130,7 +141,7 @@ void wscerr_show_error_screen(void)
 		ws_display_scroll_screen1_to(scroll >> 8, scroll >> 8);
 #endif
 
-#if defined(WSCERR_ENABLE_TEXT_BLINK)
+#if defined(WSCERR_ENABLE_BLINKING_TEXT)
 		/* Handle text blinking */
 		uint8_t prev_is_text_visible = is_text_visible;
 		is_text_visible = ((vblank_counter % TEXT_DURATION_TOTAL) < TEXT_DURATION_VISIBLE);

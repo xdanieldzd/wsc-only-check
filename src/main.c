@@ -39,12 +39,26 @@ void main(void)
 		ws_screen_fill_tiles(&wse_screen1, 0x000 | WS_SCREEN_ATTR_PALETTE(0), 0, 0, 32, 32);
 		ws_screen_fill_tiles(&wse_screen2, 0x000 | WS_SCREEN_ATTR_PALETTE(4), 0, 0, 32, 32);
 
-		ws_gdma_copy(WS_TILE_MEM(0), background_color_tiles, background_color_tiles_size);
 		ws_gdma_copy(WS_SCREEN_COLOR_MEM(0), background_color_palette, background_color_palette_size);
-		ws_gdma_copy(&wse_screen1, background_color_map, background_color_map_size);
-
-		ws_gdma_copy(WS_TILE_MEM(first_font_tile), font_tiles, font_tiles_size);
 		ws_gdma_copy(WS_SCREEN_COLOR_MEM(4), font_color_palette, font_color_palette_size);
+
+#if defined(WSCERR_ENABLE_COMPRESSION_FONT_TILES)
+		wsx_lzsa2_decompress(WS_TILE_MEM(first_font_tile), font_tiles);
+#else
+		ws_gdma_copy(WS_TILE_MEM(first_font_tile), font_tiles, font_tiles_size);
+#endif
+
+#if defined(WSCERR_ENABLE_COMPRESSION_BACKGROUND_TILES)
+		wsx_lzsa2_decompress(WS_TILE_MEM(0), background_color_tiles);
+#else
+		ws_gdma_copy(WS_TILE_MEM(0), background_color_tiles, background_color_tiles_size);
+#endif
+
+#if defined(WSCERR_ENABLE_COMPRESSION_BACKGROUND_MAP)
+		wsx_lzsa2_decompress(&wse_screen1, background_color_map);
+#else
+		ws_gdma_copy(&wse_screen1, background_color_map, background_color_map_size);
+#endif
 
 		uint8_t x = 0;
 		for (const ws_rom char* ptr = greeting_text; *ptr != '\0'; ptr++)

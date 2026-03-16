@@ -3,6 +3,7 @@
 #include <wonderful.h>
 #include <ws.h>
 #include <wse.h>
+#include <wsx/lzsa.h>
 
 #include "wscerr_config.h"
 
